@@ -1,14 +1,12 @@
 import './App.css';
 import { useState ,useEffect} from 'react';
 import { Web3Auth } from "@web3auth/modal";
-import { Keyring,ApiPromise } from "@polkadot/api";
+import { Keyring } from "@polkadot/api";
 import { CHAIN_NAMESPACES } from "@web3auth/base";
 import {u8aToHex} from "@polkadot/util";
 import {wrapBytes} from '@reef-defi/extension-dapp';
 import { decodeAddress, signatureVerify } from '@reef-defi/util-crypto';
 import {getProvider} from './utils';
-import { Contract } from "ethers";
-import {Signer} from '@reef-defi/evm-provider/Signer';
 
 const clientId = "BJJcvvvZaGzrWK90JRN2dSQ3g67rMGIn6hh9sWDIg7SVvo6se_1JD1k8_86VshiIu1dllrcj5Pr3wYDO10lFoB0";
 
@@ -47,7 +45,7 @@ function App() {
   }, []);
 
   const getUserInfo = async () => {
-    if (web3auth.status!="connected") {
+    if (web3auth.status!=="connected") {
       console.log("web3auth not initialized yet");
       alert("Web3 auth not initialized , you need to login first")
       return;
@@ -57,7 +55,6 @@ function App() {
     alert(`
     name : ${user.name}
     email : ${user.email} 
-
     `)
   };
 

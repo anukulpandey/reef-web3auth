@@ -22,25 +22,6 @@ export async function resolveEvmAddress(
     return result.toString();
   }
 
-  export function toBN(bigNumberis=0){
-    if (isU8a(bigNumberis)) {
-      return u8aToBn(bigNumberis);
-    }
-    if (isHex(bigNumberis)) {
-      return hexToBn(bigNumberis);
-    }
-  
-    if (BigNumber.isBigNumber(bigNumberis)) {
-      const hex = bigNumberis.toHexString();
-      if (hex[0] === '-') {
-        return new BN('-' + hex.substring(3), 16);
-      }
-      return new BN(hex.substring(2), 16);
-    }
-  
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new BN(bigNumberis);
-  }
 
 // returns Reef native address
 export async function resolveAddress(
