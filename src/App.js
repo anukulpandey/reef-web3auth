@@ -8,6 +8,7 @@ import {wrapBytes} from '@reef-defi/extension-dapp';
 import { decodeAddress, signatureVerify } from '@reef-defi/util-crypto';
 import {getProvider} from './utils';
 import {utils,BigNumber} from "ethers";
+import Uik from '@reef-defi/ui-kit'
 
 const clientId = "BJJcvvvZaGzrWK90JRN2dSQ3g67rMGIn6hh9sWDIg7SVvo6se_1JD1k8_86VshiIu1dllrcj5Pr3wYDO10lFoB0";
 
@@ -108,7 +109,7 @@ console.log(txHash.toHuman());
   return (
     <div className="App">
       <header className="App-header">
-       <h3>Minimal REEF web3auth dApp</h3>
+      <Uik.ReefLogo />
     <br />
         <button onClick={getUserInfo} className="card">
             Get User Info
