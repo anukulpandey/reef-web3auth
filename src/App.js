@@ -1,25 +1,19 @@
 import './App.css';
 import { useState ,useEffect} from 'react';
 import { Web3Auth } from "@web3auth/modal";
-import { cryptoWaitReady } from "@reef-defi/util-crypto";
-import { ApiPromise, WsProvider ,Keyring } from "@polkadot/api";
-// import { Provider } from "@reef-defi/evm-provider";
-import { options } from "@reef-defi/api";
+import { Keyring } from "@polkadot/api";
 import { CHAIN_NAMESPACES } from "@web3auth/base";
+import {u8aToHex} from "@polkadot/util";
+import {wrapBytes} from '@reef-defi/extension-dapp/wrapBytes';
+import { decodeAddress, signatureVerify } from '@reef-defi/util-crypto';
+// import {Provider} from './Provider';
 
-// const clientId = "BK7_IjVlLqpTGb046wIywX6GtFg7Zv4NndhoM_F140wx6DKYg3gsje8ntADoqSDKa8HZCVCAWdF53JNZT1AhPJE";
 const clientId = "BJJcvvvZaGzrWK90JRN2dSQ3g67rMGIn6hh9sWDIg7SVvo6se_1JD1k8_86VshiIu1dllrcj5Pr3wYDO10lFoB0";
 
 
-// const provider = new Provider(
-//   options({
-//     provider: new WsProvider("wss://rpc.reefscan.com/ws")
-//   })
-// );
-
 function App() {
   const [web3auth, setWeb3auth] = useState(null);
-  const [provider, setProvider] = useState(null);
+  const [keyPair, setKeyPair] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -64,43 +58,38 @@ function App() {
     `)
   };
 
-  const login = async () => {
-    if (!web3auth) {
-      console.log("web3auth not initialized yet");
-      return;
-    }
-    console.log("i am here")
-    const web3authProvider =await web3auth.connect(); 
-    console.log("logged in")
-    console.log(web3authProvider);
-
-  };
-
   const evenIdk = async ()=>{
     const privateKey = await web3auth.provider.request({ method: "private_key" })
 const keyring = new Keyring({ ss58Format: 42,type: "sr25519" });
-console.log(keyring)
-const keyPair = keyring.addFromUri("0x" + String(privateKey));
-
-// keyPair.address is the account address.
-const account = keyPair?.address;
-console.log(account);
-
+const _keyPair = keyring.addFromUri("0x" + String(privateKey));
+const account = _keyPair?.address;
+setKeyPair(keyPair);
 alert(account)
-
-
   }
 
+  const isValidSignature = (signedMessage, signature, address) => {
+    const publicKey = decodeAddress(address);
+    const hexPublicKey = u8aToHex(publicKey);
+  
+    return signatureVerify(signedMessage, signature, hexPublicKey).isValid;
+  };
+
+  const signRaw = async(message)=>{
+    const privateKey = await web3auth.provider.request({ method: "private_key" })
+    const keyring = new Keyring({ ss58Format: 42,type: "sr25519" });
+    const _keyPair = keyring.addFromUri("0x" + String(privateKey));
+   const signature= u8aToHex(_keyPair.sign(wrapBytes(message)))
+   const _isValid = await isValidSignature(message,signature,_keyPair.address)
+   alert(`signature: ${signature}\nverified: ${_isValid}`);
+
+   return signature;
+  }
 
 
   return (
     <div className="App">
       <header className="App-header">
        <h3>Minimal REEF web3auth dApp</h3>
-
-      {/* <button onClick={login} className="card">
-      Login
-    </button> */}
     <br />
         <button onClick={getUserInfo} className="card">
             Get User Info
@@ -109,6 +98,11 @@ alert(account)
         <button onClick={evenIdk} className="card">
             Get Native Address
           </button>
+          <br/>
+        <button onClick={()=>signRaw("hello anukul")} className="card">
+            Sign Raw
+          </button>
+
      
       </header>
     </div>

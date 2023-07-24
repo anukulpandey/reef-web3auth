@@ -6,6 +6,7 @@
     "@ethereumjs/common": "^3.0.2",
     "@reef-defi/api": "^1.1.0",
     "@reef-defi/evm-provider": "^1.0.10",
+    "@reef-defi/extension-dapp": "^1.0.22",
     "@reef-defi/util-crypto": "^7.8.2",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",

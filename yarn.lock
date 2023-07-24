@@ -2967,6 +2967,23 @@
     blakejs "~1.1.0"
     ethers "~5.5.0"
 
+"@reef-defi/extension-dapp@^1.0.22":
+  version "1.0.22"
+  resolved "https://registry.yarnpkg.com/@reef-defi/extension-dapp/-/extension-dapp-1.0.22.tgz#2094d00974878073718c6874aeeeaf70a9bbb40d"
+  integrity sha512-U6Xk2ZjeKqkZ384TkU3pKThJYWYowhG/Y6wJdGQdIOxktMTFOLqmVy1Q8XvZR1PeicTd2eJAtY4jC6EJcrjE8Q==
+  dependencies:
+    "@babel/runtime" "^7.16.0"
+    "@reef-defi/extension-inject" "^1.0.22"
+    "@reef-defi/util" "^7.8.2"
+    "@reef-defi/util-crypto" "^7.8.2"
+
+"@reef-defi/extension-inject@^1.0.22":
+  version "1.0.22"
+  resolved "https://registry.yarnpkg.com/@reef-defi/extension-inject/-/extension-inject-1.0.22.tgz#c878b3e273d31a959efd08e93e7f20976399d72e"
+  integrity sha512-57QJQ7bOvB8kkalyV9EiIgtIciaIj7RP0Yp5iWrETbEWNwXV6Wm5BXJdhNRwOiW90a/OlNv79ouEx3qoF+knRQ==
+  dependencies:
+    "@babel/runtime" "^7.16.0"
+
 "@reef-defi/networks@7.8.2":
   version "7.8.2"
   resolved "https://registry.yarnpkg.com/@reef-defi/networks/-/networks-7.8.2.tgz#52d2e0bbbfbf61449ae410a4b79a46b222ecf7bc"
@@ -3016,7 +3033,7 @@
     tweetnacl "^1.0.3"
     xxhashjs "^0.2.2"
 
-"@reef-defi/util@7.8.2":
+"@reef-defi/util@7.8.2", "@reef-defi/util@^7.8.2":
   version "7.8.2"
   resolved "https://registry.yarnpkg.com/@reef-defi/util/-/util-7.8.2.tgz#8f03851211fb82f6afa6158641068fa6d4793ad7"
   integrity sha512-gPtSVDqUsAK1uEjQ8XyRgjlWIUMTo1qq+AO4IoYH/xc5jjQkEJ9rYwbYD3x8ZgB1Zca/uOjNbAVRp0LVmDABaA==
