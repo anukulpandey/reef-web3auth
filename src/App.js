@@ -8,6 +8,7 @@ import { wrapBytes } from "@reef-defi/extension-dapp";
 import { decodeAddress, signatureVerify } from "@reef-defi/util-crypto";
 import { getProvider } from "./utils";
 import { utils, BigNumber } from "ethers";
+import fromExponential from 'from-exponential';
 import Uik from "@reef-defi/ui-kit";
 
 const clientId =
@@ -19,6 +20,9 @@ function App() {
   const [user,setUser] = useState(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
   const [balance,setBalance] = useState("fetching")
+  const [destination,setDestination] = useState("");
+  const [amount,setAmount] = useState(0);
+  const [sendBtnVal,setSendBtnVal] = useState("Enter address");
 
   useEffect(() => {
     const init = async () => {
@@ -41,6 +45,7 @@ function App() {
           method: "private_key",
         });
         setPrivateKey(privateKey);
+
         
       } catch (error) {
         console.error(error);
@@ -102,43 +107,32 @@ function App() {
     return signature;
   };
 
-  const makeTransaction = async () => {
-    const privateKey = await web3auth.provider.request({
-      method: "private_key",
-    });
-    const keyring = new Keyring({ ss58Format: 42, type: "sr25519" });
-    const _keyPair = keyring.addFromUri("0x" + String(privateKey));
-    const provider = await getProvider();
-    const txHash = await provider.tx.balances
-      .transfer("5EnY9eFwEDcEJ62dJWrTXhTucJ4pzGym4WZ2xcDKiT3eJecP", 12345)
-      .signAndSend(_keyPair);
-    console.log(txHash.toHuman());
+  const logout = async () => {
+    await web3auth.logout();
   };
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        <Uik.ReefLogo />
-        {user!=null?
-        <div>
-          <div className="usernameBtn">
-            <div className="usernameElem">
-              {balance!="fetching"?
-                <Uik.Button text={balance.split('.')[0]+' REEF'}/>:
-              <Uik.Button text='Button' loading size='small' loader='fish'/>
-            }
-            </div>
-          <Uik.Button text={user.name} rounded fill onClick={()=>setIsAccountModalOpen(true)} size='large'/>
-          </div>
-        <button onClick={() => signRaw("hello anukul")} className="card">
-          Sign Raw
-        </button>
-        <br />
-        <button onClick={makeTransaction} className="card">
-          Make transaction
-        </button>
-        <br />
-        <Uik.Modal
+  const makeTransaction = async () => {
+    if(isValidAddress(destination) && isValidAmount(amount)){
+      const privateKey = await web3auth.provider.request({
+        method: "private_key",
+      });
+      const keyring = new Keyring({ ss58Format: 42, type: "sr25519" });
+      const _keyPair = keyring.addFromUri("0x" + String(privateKey));
+      const provider = await getProvider();
+      const SINGLE_REEF = BigNumber.from("1000000000000000000");
+      const TRANSFER_AMOUNT = SINGLE_REEF.mul(amount);
+      const txHash = await provider.tx.balances
+        .transfer(destination, TRANSFER_AMOUNT.toString())
+        .signAndSend(_keyPair);
+      Uik.notify.success(`Transaction Successful! Sent ${amount} to ${destination}`)
+      Uik.notify.info(`Transaction hash : ${txHash.toHuman()}`)
+    }else{
+      Uik.notify.danger('Please enter details')
+    }
+  };
+
+  const modal = ()=>{
+    return <Uik.Modal
     title='Account Info'
     isOpen={isAccountModalOpen}
     onClose={() => setIsAccountModalOpen(false)}
@@ -146,7 +140,7 @@ function App() {
     onClosed={() => {}}
     footer={
       <>
-        <Uik.Button text='Close' onClick={() => setIsAccountModalOpen(false)}/>
+        <Uik.Button text='Logout' onClick={() => logout()}/>
       </>
     }
   >
@@ -164,6 +158,80 @@ function App() {
     <Uik.Text className="accountInfoContent">Logged in Using: {user.typeOfLogin} </Uik.Text>
     </div>
   </Uik.Modal>
+  }
+
+  const amountValidator = async(e)=>{
+      if(e.target.value<=0){
+        setSendBtnVal("Amount too less");
+      }  else if(e.target.value>=balance-1){
+        setSendBtnVal("Amount too high");
+      }else{
+        if(isValidAddress(destination)){
+          setSendBtnVal("Send")
+        }else{
+          setSendBtnVal("Invalid Destination Address")
+        }
+      }
+      setAmount(e.target.value)
+  }
+
+  const isValidAddress = (address)=>{
+    if(address.length==48)return true;
+    return false;
+  }
+
+  const isValidAmount=(amount)=>{
+    if(amount<=0||amount>=balance-1)return false;
+    return true;
+  }
+
+  const destinationValidator = async(e)=>{
+      if(isValidAddress(e.target.value)){
+        setSendBtnVal("Send")
+      }else if(isValidAmount(amount)){
+        setSendBtnVal("Invalid Amount");
+      }else{
+        setSendBtnVal("Invalid Address");
+      }
+      setDestination(e.target.value)
+  }
+
+  return (
+    <div className="App">
+      <header className="App-header">
+        <Uik.ReefLogo />
+        {user!=null?
+        <div>
+          <div className="usernameBtn">
+            <div className="usernameElem">
+              {balance!="fetching"?
+                <Uik.Button text={balance.split('.')[0]+' REEF'}/>:
+              <Uik.Button text='Button' loading size='small' loader='fish'/>
+            }
+            </div>
+          <Uik.Button text={user.name} rounded fill onClick={()=>setIsAccountModalOpen(true)} size='large'/>
+          </div>
+          <div className="sendReefContainer">
+          <Uik.Card title='Send Reef' titlePosition='center' className="sendReefContainerForm">
+    <Uik.Input className="sendReefContainerFormDestination" placeholder="Destination" name={"destination"} onChange={destinationValidator}/>
+    <Uik.Input className="sendReefContainerFormDestination" placeholder="Amount" type="number" name={"amount"} onChange={amountValidator}/>
+    <div className="sendBtn">
+      <button
+      type="button"
+      className="send-reef-btn"
+      onClick={makeTransaction}
+    >
+      <Uik.Bubbles />
+      <Uik.Text text={sendBtnVal} className="sendBtnText"/>
+    </button>
+    </div>
+          </Uik.Card>
+          </div>
+        <button onClick={() => signRaw("hello anukul")} className="card">
+          Sign Raw
+        </button>
+        <br />
+        {modal()}
         </div>
         :<div>You need to login to see this page</div>}
       </header>

@@ -14,7 +14,6 @@ export async function resolveEvmAddress(
     return result.toString();
   }
 
-
 // returns Reef native address
 export async function resolveAddress(
     provider,

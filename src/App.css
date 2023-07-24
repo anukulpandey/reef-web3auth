@@ -22,5 +22,56 @@
 
 .accountInfoContent{
     padding: 4px;
-
 }
+
+.sendReefContainer{
+    margin: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.sendReefContainerForm{
+    max-width: 450px;
+}
+
+.sendReefContainerFormDestination{
+    padding: 10px;
+}
+
+.sendReefBtn{
+    background: transparent;
+    outline: none;
+    padding: 20px;
+    border: 0px;
+}
+
+.send-reef-btn {
+    margin-top: 10px;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #c52cbc, #8332ca);
+    box-shadow: 0 15px 30px -15px #8332ca;
+    color: white;
+    padding: 12px 20px;
+    width: 90%;
+    min-width: 100px;
+    text-decoration: none;
+    border-radius: 20px;
+    border: none;
+    position: relative;
+    overflow: hidden;
+    filter: brightness(1.05);
+    transition: all 0.1s;
+  }
+
+  .sendBtn{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .sendBtnText{
+    color: white!important;
+  }
