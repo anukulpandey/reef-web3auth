@@ -1,7 +1,13 @@
 {
-  "name": "plkdt",
+  "name": "reef-web3auth",
   "version": "0.1.0",
   "private": true,
+  "author": "Anukul Pandey",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anukulpandey/reef-web3auth"
+  },
+  "license": "INSERT_LICENSE_TYPE_HERE",
   "dependencies": {
     "@ethereumjs/common": "^3.0.2",
     "@reef-defi/api": "^1.1.0",
