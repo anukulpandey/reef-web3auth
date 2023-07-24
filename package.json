@@ -5,9 +5,9 @@
   "author": "Anukul Pandey",
   "repository": {
     "type": "git",
-    "url": "https://github.com/anukulpandey/reef-web3auth"
+    "url": "https://github.com/reef-chain/web3auth"
   },
-  "license": "INSERT_LICENSE_TYPE_HERE",
+  "license": "MIT",
   "dependencies": {
     "@ethereumjs/common": "^3.0.2",
     "@reef-defi/api": "^1.1.0",
