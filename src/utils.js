@@ -1,14 +1,6 @@
 import { isSubstrateAddress } from "@reef-defi/evm-provider/utils";
-import {
-    hexToBn,
-    isHex,
-    isU8a,
-    u8aToBn,
-  } from '@polkadot/util';
-  import BN from 'bn.js';
-  import { BigNumber } from '@ethersproject/bignumber';
-  import { WsProvider } from "@polkadot/rpc-provider";
-  import { ApiPromise } from "@polkadot/api";
+import { WsProvider } from "@polkadot/rpc-provider";
+import { ApiPromise } from "@polkadot/api";
 
 export async function resolveEvmAddress(
     provider,

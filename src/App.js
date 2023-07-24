@@ -7,13 +7,13 @@ import {u8aToHex} from "@polkadot/util";
 import {wrapBytes} from '@reef-defi/extension-dapp';
 import { decodeAddress, signatureVerify } from '@reef-defi/util-crypto';
 import {getProvider} from './utils';
+import {utils,BigNumber} from "ethers";
 
 const clientId = "BJJcvvvZaGzrWK90JRN2dSQ3g67rMGIn6hh9sWDIg7SVvo6se_1JD1k8_86VshiIu1dllrcj5Pr3wYDO10lFoB0";
 
 
 function App() {
   const [web3auth, setWeb3auth] = useState(null);
-  const [keyPair, setKeyPair] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -58,12 +58,11 @@ function App() {
     `)
   };
 
-  const evenIdk = async ()=>{
+  const getNativeAddress = async ()=>{
     const privateKey = await web3auth.provider.request({ method: "private_key" })
 const keyring = new Keyring({ ss58Format: 42,type: "sr25519" });
 const _keyPair = keyring.addFromUri("0x" + String(privateKey));
 const account = _keyPair?.address;
-setKeyPair(keyPair);
 alert(account)
   }
 
@@ -85,7 +84,7 @@ alert(account)
    return signature;
   }
 
-  const createContractInstance = async()=>{
+  const makeTransaction = async()=>{
     const privateKey = await web3auth.provider.request({ method: "private_key" })
     const keyring = new Keyring({ ss58Format: 42,type: "sr25519" });
     const _keyPair = keyring.addFromUri("0x" + String(privateKey));
@@ -94,6 +93,15 @@ alert(account)
       .transfer("5EnY9eFwEDcEJ62dJWrTXhTucJ4pzGym4WZ2xcDKiT3eJecP", 12345)
       .signAndSend(_keyPair);
 console.log(txHash.toHuman());
+  }
+
+  const getBalance = async()=>{
+    const privateKey = await web3auth.provider.request({ method: "private_key" })
+    const keyring = new Keyring({ ss58Format: 42,type: "sr25519" });
+    const _keyPair = keyring.addFromUri("0x" + String(privateKey));
+    const provider = await getProvider();
+    const data = await provider.query.system.account(_keyPair.address);
+    alert(utils.formatUnits( BigNumber.from(data.data.free.toString())._hex,18)+'REEF');
   }
 
 
@@ -106,7 +114,7 @@ console.log(txHash.toHuman());
             Get User Info
           </button>
           <br />
-        <button onClick={evenIdk} className="card">
+        <button onClick={getNativeAddress} className="card">
             Get Native Address
           </button>
           <br/>
@@ -114,8 +122,12 @@ console.log(txHash.toHuman());
             Sign Raw
           </button>
           <br/>
-        <button onClick={createContractInstance} className="card">
-            Contract Instance
+        <button onClick={makeTransaction} className="card">
+            Make transaction
+          </button>
+          <br/>
+        <button onClick={getBalance} className="card">
+            Get Balance
           </button>
           <br/>
 
