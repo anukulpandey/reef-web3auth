@@ -1,0 +1,18 @@
+.App-header{
+    padding: 15px;
+}
+
+.App{
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+}
+
+.usernameBtn{
+    position: absolute;
+    right: 20px;
+    top: 20px;
+}
+.accountInfoContent{
+    padding: 4px;
+}
