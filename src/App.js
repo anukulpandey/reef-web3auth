@@ -18,6 +18,7 @@ function App() {
   const [PrivateKey, setPrivateKey] = useState(null);
   const [user,setUser] = useState(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
+  const [balance,setBalance] = useState("fetching")
 
   useEffect(() => {
     const init = async () => {
@@ -70,7 +71,10 @@ function App() {
     if(user!=null){
       userData['address'] = _keyPair?.address;
       setUser(userData);
-      console.log(userData);
+      const provider = await getProvider();
+      const data = await provider.query.system.account(_keyPair.address);
+      setBalance(utils.formatUnits(BigNumber.from(data.data.free.toString())._hex, 18) +
+      " REEF");
     }
   };
 
@@ -111,27 +115,21 @@ function App() {
     console.log(txHash.toHuman());
   };
 
-  const getBalance = async () => {
-    const privateKey = await web3auth.provider.request({
-      method: "private_key",
-    });
-    const keyring = new Keyring({ ss58Format: 42, type: "sr25519" });
-    const _keyPair = keyring.addFromUri("0x" + String(privateKey));
-    const provider = await getProvider();
-    const data = await provider.query.system.account(_keyPair.address);
-    alert(
-      utils.formatUnits(BigNumber.from(data.data.free.toString())._hex, 18) +
-        "REEF"
-    );
-  };
-
   return (
     <div className="App">
       <header className="App-header">
         <Uik.ReefLogo />
         {user!=null?
         <div>
-          <Uik.Button text={user.name} rounded fill onClick={()=>setIsAccountModalOpen(true)} className="usernameBtn" size='large'/>
+          <div className="usernameBtn">
+            <div className="usernameElem">
+              {balance!="fetching"?
+                <Uik.Button text={balance.split('.')[0]+' REEF'}/>:
+              <Uik.Button text='Button' loading size='small' loader='fish'/>
+            }
+            </div>
+          <Uik.Button text={user.name} rounded fill onClick={()=>setIsAccountModalOpen(true)} size='large'/>
+          </div>
         <button onClick={() => signRaw("hello anukul")} className="card">
           Sign Raw
         </button>
@@ -140,9 +138,6 @@ function App() {
           Make transaction
         </button>
         <br />
-        <button onClick={getBalance} className="card">
-          Get Balance
-        </button>
         <Uik.Modal
     title='Account Info'
     isOpen={isAccountModalOpen}
@@ -164,6 +159,9 @@ function App() {
   />
     <Uik.Text className="accountInfoContent">Email: {user.email} </Uik.Text>
     <Uik.Text className="accountInfoContent">Address: {user.address} </Uik.Text>
+    <Uik.Text className="accountInfoContent">Balance: {balance} </Uik.Text>
+    <Uik.Text className="accountInfoContent">Verified Using: {user.verifier} </Uik.Text>
+    <Uik.Text className="accountInfoContent">Logged in Using: {user.typeOfLogin} </Uik.Text>
     </div>
   </Uik.Modal>
         </div>
