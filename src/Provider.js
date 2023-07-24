@@ -4,7 +4,6 @@ import { isHexString } from '@ethersproject/bytes';
 import { resolveProperties } from '@ethersproject/properties';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Logger } from '@ethersproject/logger';
-import Scanner from '@open-web3/scanner';
 import { ApiPromise } from '@polkadot/api';
 import {
   hexToU8a,
@@ -19,7 +18,7 @@ import { resolveAddress, resolveEvmAddress, toBN } from './utils';
 
 const logger = new Logger('evm-provider');
 
-class Provider {
+export class Provider {
   constructor(_apiOptions, dataProvider) {
     const apiOptions = options(_apiOptions);
 
@@ -29,14 +28,6 @@ class Provider {
     this._isProvider = true;
 
     this.dataProvider = dataProvider;
-    this.scanner = new Scanner({
-      wsProvider: apiOptions.provider,
-      types: apiOptions.types,
-      typesAlias: apiOptions.typesAlias,
-      typesSpec: apiOptions.typesSpec,
-      typesChain: apiOptions.typesChain,
-      typesBundle: apiOptions.typesBundle
-    });
   }
 
   static isProvider(value) {
@@ -391,90 +382,13 @@ class Provider {
     blockHash,
     from
   ) {
-    const detail = await this.scanner.getBlockDetail({
-      blockHash: blockHash
-    });
-
-    const blockNumber = detail.number;
-    const extrinsic = detail.extrinsics.find(
-      ({ hash }) => hash === transactionHash
-    );
-
-    if (!extrinsic) {
-      return logger.throwError(`Transaction hash not found`);
-    }
-
-    const transactionIndex = extrinsic.index;
-
-    const events = detail.events.filter(
-      ({ phaseIndex }) => phaseIndex === transactionIndex
-    );
-
-    const findCreated = events.find(
-      (x) =>
-        x.section.toUpperCase() === 'EVM' &&
-        x.method.toUpperCase() === 'CREATED'
-    );
-
-    const findExecuted = events.find(
-      (x) =>
-        x.section.toUpperCase() === 'EVM' &&
-        x.method.toUpperCase() === 'EXECUTED'
-    );
-
-    const result = events.find(
-      (x) =>
-        x.section.toUpperCase() === 'SYSTEM' &&
-        x.method.toUpperCase() === 'EXTRINSICSUCCESS'
-    );
-
-    if (!result) {
-      return logger.throwError(`Can't find event`);
-    }
-
-    const status = findCreated || findExecuted ? 1 : 0;
-
-    const contractAddress = findCreated ? findCreated.args[0] : null;
-
-    const to = findExecuted ? findExecuted.args[0] : null;
-
-    const logs = events
-      .filter((e) => {
-        return (
-          e.method.toUpperCase() === 'LOG' && e.section.toUpperCase() === 'EVM'
-        );
-      })
-      .map((log, index) => {
-        return {
-          transactionHash,
-          blockNumber,
-          blockHash,
-          transactionIndex,
-          removed: false,
-          address: log.args[0].address,
-          data: log.args[0].data,
-          topics: log.args[0].topics,
-          logIndex: index
-        };
-      });
-
-    const gasUsed = BigNumber.from(result.args[0].weight);
-
     return {
-      to,
       from,
-      contractAddress,
-      transactionIndex,
-      gasUsed,
       logsBloom: '0x',
       blockHash,
       transactionHash,
-      logs,
-      blockNumber,
       confirmations: 4,
-      cumulativeGasUsed: gasUsed,
       byzantium: false,
-      status,
       effectiveGasPrice: BigNumber.from('1'),
       type: 0
     };
