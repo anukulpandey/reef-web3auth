@@ -23,6 +23,7 @@ function App() {
   const [destination,setDestination] = useState("");
   const [amount,setAmount] = useState(0);
   const [sendBtnVal,setSendBtnVal] = useState("Enter address");
+  const [reefProvider, setReefProvider] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -45,8 +46,8 @@ function App() {
           method: "private_key",
         });
         setPrivateKey(privateKey);
-
-        
+        const provider = await getProvider();
+        setReefProvider(provider);
       } catch (error) {
         console.error(error);
       }
@@ -62,6 +63,11 @@ function App() {
   useEffect(() => {
     getNativeAddress();
   }, [user!=null])
+
+  useEffect(async()=>{
+    const provider = await getProvider();
+    setReefProvider(provider);
+  },[reefProvider])
   
 
   const getUserInfo = async () => {
@@ -76,7 +82,12 @@ function App() {
     if(user!=null){
       userData['address'] = _keyPair?.address;
       setUser(userData);
-      const provider = await getProvider();
+      let provider;
+      if(reefProvider==null){
+        provider = await getProvider();
+      }else{
+        provider = reefProvider
+      }
       const data = await provider.query.system.account(_keyPair.address);
       setBalance(utils.formatUnits(BigNumber.from(data.data.free.toString())._hex, 18) +
       " REEF");
@@ -118,7 +129,12 @@ function App() {
       });
       const keyring = new Keyring({ ss58Format: 42, type: "sr25519" });
       const _keyPair = keyring.addFromUri("0x" + String(privateKey));
-      const provider = await getProvider();
+      let provider;
+      if(reefProvider==null){
+        provider = await getProvider();
+      }else{
+        provider = reefProvider
+      }
       const SINGLE_REEF = BigNumber.from("1000000000000000000");
       const TRANSFER_AMOUNT = SINGLE_REEF.mul(amount);
       const txHash = await provider.tx.balances
