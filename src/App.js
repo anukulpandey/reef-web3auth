@@ -7,8 +7,10 @@ import { u8aToHex } from "@polkadot/util";
 import { wrapBytes } from "@reef-defi/extension-dapp";
 import { decodeAddress, signatureVerify } from "@reef-defi/util-crypto";
 import { getProvider } from "./utils";
-import { utils, BigNumber } from "ethers";
+import { utils, BigNumber, Contract, ethers } from "ethers";
 import Uik from "@reef-defi/ui-kit";
+import {Abi} from "@polkadot/api-contract";
+import { toUtf8Bytes } from "ethers/lib/utils";
 
 const clientId =
   "BJJcvvvZaGzrWK90JRN2dSQ3g67rMGIn6hh9sWDIg7SVvo6se_1JD1k8_86VshiIu1dllrcj5Pr3wYDO10lFoB0";
@@ -24,6 +26,7 @@ function App() {
   const [amount,setAmount] = useState(0);
   const [sendBtnVal,setSendBtnVal] = useState("Enter native address");
   const [reefProvider, setReefProvider] = useState(null);
+  const [web3authProvider_, setWeb3authProvider] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -41,7 +44,8 @@ function App() {
         setWeb3auth(web3auth);
 
         await web3auth.initModal();
-        web3auth.connect();
+        const _web3authProvider = web3auth.connect();
+        setWeb3authProvider(_web3authProvider);
         const privateKey = await web3auth.provider.request({
           method: "private_key",
         });
@@ -57,6 +61,7 @@ function App() {
     init();
   }, []);
 
+  const contractAddress = "0x6D0Ed5218b62468aE6987B1E95B7b07054684d80";
   useEffect(() => {
     getUserInfo();
   }, [PrivateKey])
@@ -71,6 +76,21 @@ function App() {
     const user = await web3auth.getUserInfo();
     setUser(user);
   };
+
+  const contractABI = [{
+    "name": "getOwner",
+    "type": "function",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "pure"
+  }];
+
 
   const getNativeAddress = async () => {    
     const keyring = new Keyring({ ss58Format: 42, type: "sr25519" });
@@ -98,12 +118,62 @@ function App() {
     return signatureVerify(signedMessage, signature, hexPublicKey).isValid;
   };
 
+  function createClaimEvmSignature(substrateAddress) {
+    const publicKeySubstrate = decodeAddress(substrateAddress);
+    let message =
+      'reef evm:' + Buffer.from(publicKeySubstrate).toString('hex');
+  
+    if (typeof message === 'string') {
+      message = toUtf8Bytes(message);
+    }
+  
+    return message;
+  }
+
+  const bindEvm = async ()=>{
+    const keyring = new Keyring({ type: 'sr25519' });
+    const reefKey = keyring.addFromUri("0x"+PrivateKey);
+    const ethKey = new ethers.Wallet(PrivateKey);
+    console.log(ethKey.address);
+
+    const msg = createClaimEvmSignature(reefKey.address);
+    let signature = await ethKey.signMessage(msg);
+
+    const res = await reefProvider.tx.evmAccounts.claimAccount(
+        ethKey.address,
+        signature
+    ).signAndSend(reefKey);
+  }
+
   const signRaw = async (message) => {
     const privateKey = await web3auth.provider.request({
       method: "private_key",
     });
+
+    
+    
+    // const contract = new Contract("0x6D0Ed5218b62468aE6987B1E95B7b07054684d80",[{"name":"getOwner","type":"function","inputs":[],"outputs":[{"name":"","type":"string","internalType":"string"}],"stateMutability":"pure"}],provider);
+    // console.log(await contract.getOwner())
     const keyring = new Keyring({ ss58Format: 42, type: "sr25519" });
     const _keyPair = keyring.addFromUri("0x" + String(privateKey));
+
+//     const data = await reefProvider.query.system.account(_keyPair.address);
+// console.log(data.toHuman());
+let provider;
+      if(reefProvider==null){
+        provider = await getProvider();
+      }else{
+        provider = reefProvider
+      }
+      
+// const contract = new ContractPromise(reefProvider, , "0x6D0Ed5218b62468aE6987B1E95B7b07054684d80");
+      // console.log(contract)
+      
+      
+    //  const abi = new Abi(JSON.stringify(contractABI),provider.registry.getChainProperties())
+    //  console.log(abi)
+
+
     const signature = u8aToHex(_keyPair.sign(wrapBytes(message)));
     const _isValid = await isValidSignature(
       message,
@@ -132,6 +202,7 @@ function App() {
       }else{
         provider = reefProvider
       }
+      
       const SINGLE_REEF = BigNumber.from("1000000000000000000");
       const TRANSFER_AMOUNT = SINGLE_REEF.mul(amount);
       const txHash = await provider.tx.balances
@@ -186,6 +257,11 @@ function App() {
    {sendReefContainer()}
     </div>
   </Uik.Modal>
+  }
+
+  const getContract = async ()=>{
+    if(!web3auth)return;
+
   }
 
   const amountValidator = async(e)=>{
@@ -261,6 +337,11 @@ onClick={makeTransaction}
         <button onClick={() => signRaw("hello anukul")} className="card">
           Sign Raw
         </button>
+        <br />
+        <button onClick={() => bindEvm()} className="card">
+          Bind EVM
+        </button>
+        
         <br />
         {modal()}
         </div>

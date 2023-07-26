@@ -268,6 +268,8 @@ export async function resolveAddress(
       "index": "u32"
     }
 } },);
+const res = await api.isReady;
+console.log("Reef rpc url is ready",res);
   return api
       
     } catch (error) {
