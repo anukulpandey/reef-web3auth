@@ -11,6 +11,7 @@ import { utils, BigNumber, Contract, ethers } from "ethers";
 import Uik from "@reef-defi/ui-kit";
 import {Abi} from "@polkadot/api-contract";
 import { toUtf8Bytes } from "ethers/lib/utils";
+import {Provider} from "@ethersproject/abstract-provider"
 
 const clientId =
   "BJJcvvvZaGzrWK90JRN2dSQ3g67rMGIn6hh9sWDIg7SVvo6se_1JD1k8_86VshiIu1dllrcj5Pr3wYDO10lFoB0";
@@ -26,8 +27,7 @@ function App() {
   const [amount,setAmount] = useState(0);
   const [sendBtnVal,setSendBtnVal] = useState("Enter native address");
   const [reefProvider, setReefProvider] = useState(null);
-  const [web3authProvider_, setWeb3authProvider] = useState(null);
-
+  
   useEffect(() => {
     const init = async () => {
       try {
@@ -45,7 +45,6 @@ function App() {
 
         await web3auth.initModal();
         const _web3authProvider = web3auth.connect();
-        setWeb3authProvider(_web3authProvider);
         const privateKey = await web3auth.provider.request({
           method: "private_key",
         });
@@ -131,49 +130,43 @@ function App() {
   }
 
   const bindEvm = async ()=>{
-    const keyring = new Keyring({ type: 'sr25519' });
-    const reefKey = keyring.addFromUri("0x"+PrivateKey);
-    const ethKey = new ethers.Wallet(PrivateKey);
-    console.log(ethKey.address);
-
-    const msg = createClaimEvmSignature(reefKey.address);
-    let signature = await ethKey.signMessage(msg);
-
-    const res = await reefProvider.tx.evmAccounts.claimAccount(
-        ethKey.address,
-        signature
-    ).signAndSend(reefKey);
+    Uik.notify.success("EVM Binding process started")
+    const isBinded = await reefProvider.query.evmAccounts.evmAddresses(user.address);
+    if(isBinded.isEmpty){
+      try {
+        const keyring = new Keyring({ type: 'sr25519' });
+        const reefKey = keyring.addFromUri("0x"+PrivateKey);
+        const ethKey = new ethers.Wallet(PrivateKey);
+        console.log(ethKey.address);
+    
+        const msg = createClaimEvmSignature(reefKey.address);
+        let signature = await ethKey.signMessage(msg);
+        const res = await reefProvider.tx.evmAccounts.claimAccount(
+          ethKey.address,
+          signature
+      ).signAndSend(reefKey);
+      Uik.notify.success("Successfully claimed EVM address")
+      } catch (error) {
+        Uik.notify.danger("Encountered an error")
+       console.log('err==',error); 
+      }
+    }else{
+      Uik.notify.danger("EVM address already claimed")
+    }
   }
 
   const signRaw = async (message) => {
     const privateKey = await web3auth.provider.request({
       method: "private_key",
     });
-
-    
-    
-    // const contract = new Contract("0x6D0Ed5218b62468aE6987B1E95B7b07054684d80",[{"name":"getOwner","type":"function","inputs":[],"outputs":[{"name":"","type":"string","internalType":"string"}],"stateMutability":"pure"}],provider);
-    // console.log(await contract.getOwner())
     const keyring = new Keyring({ ss58Format: 42, type: "sr25519" });
     const _keyPair = keyring.addFromUri("0x" + String(privateKey));
-
-//     const data = await reefProvider.query.system.account(_keyPair.address);
-// console.log(data.toHuman());
 let provider;
       if(reefProvider==null){
         provider = await getProvider();
       }else{
         provider = reefProvider
       }
-      
-// const contract = new ContractPromise(reefProvider, , "0x6D0Ed5218b62468aE6987B1E95B7b07054684d80");
-      // console.log(contract)
-      
-      
-    //  const abi = new Abi(JSON.stringify(contractABI),provider.registry.getChainProperties())
-    //  console.log(abi)
-
-
     const signature = u8aToHex(_keyPair.sign(wrapBytes(message)));
     const _isValid = await isValidSignature(
       message,
@@ -259,10 +252,6 @@ let provider;
   </Uik.Modal>
   }
 
-  const getContract = async ()=>{
-    if(!web3auth)return;
-
-  }
 
   const amountValidator = async(e)=>{
       if(e.target.value<=0){
@@ -324,6 +313,7 @@ onClick={makeTransaction}
         {user!=null?
         <div>
           <div className="usernameBtn">
+            <button className="textBtn" onClick={bindEvm}>Bind EVM</button>
             <button className="textBtn" onClick={()=>setIsSendReefModalOpen(true)}>Send Reef</button>
             <div className="usernameElem">
               {balance!=="fetching"?
@@ -338,9 +328,6 @@ onClick={makeTransaction}
           Sign Raw
         </button>
         <br />
-        <button onClick={() => bindEvm()} className="card">
-          Bind EVM
-        </button>
         
         <br />
         {modal()}
