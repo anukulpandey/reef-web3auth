@@ -81,3 +81,19 @@
   .uik-modal__popup{
     max-width: max-content!important;
   }
+
+  .textBtn{
+    margin-right: 80px;
+    background-color: transparent;
+    border: none;
+    font-size: 18px;
+    font-weight: 500;
+    font-family: 'Poppins';
+    color: #898e9c;
+  }
+
+  .textBtn:hover{
+    cursor: pointer;
+
+    color: #5d3bad;
+  }

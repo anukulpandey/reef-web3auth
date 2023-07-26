@@ -139,6 +139,7 @@ function App() {
         .signAndSend(_keyPair);
       Uik.notify.success(`Transaction Successful! Sent ${amount} to ${destination}`)
       Uik.notify.info(`Transaction hash : ${txHash.toHuman()}`)
+      Uik.dropConfetti()
     }else{
       Uik.notify.danger('Please enter details')
     }
@@ -247,9 +248,10 @@ onClick={makeTransaction}
         {user!=null?
         <div>
           <div className="usernameBtn">
+            <button className="textBtn" onClick={()=>setIsSendReefModalOpen(true)}>Send Reef</button>
             <div className="usernameElem">
               {balance!=="fetching"?
-                <Uik.Button text={balance.split('.')[0]+' REEF'}/>:
+              <Uik.ReefAmount value={balance.split('.')[0]} />:
               <Uik.Button text='Button' loading size='small' loader='fish'/>
             }
             </div>
@@ -258,9 +260,6 @@ onClick={makeTransaction}
           {sendReefModal()}
         <button onClick={() => signRaw("hello anukul")} className="card">
           Sign Raw
-        </button>
-        <button onClick={() => setIsSendReefModalOpen(true)} className="card">
-          Send Reef
         </button>
         <br />
         {modal()}
