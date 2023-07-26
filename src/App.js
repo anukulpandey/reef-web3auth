@@ -8,7 +8,6 @@ import { wrapBytes } from "@reef-defi/extension-dapp";
 import { decodeAddress, signatureVerify } from "@reef-defi/util-crypto";
 import { getProvider } from "./utils";
 import { utils, BigNumber } from "ethers";
-import fromExponential from 'from-exponential';
 import Uik from "@reef-defi/ui-kit";
 
 const clientId =
@@ -19,10 +18,11 @@ function App() {
   const [PrivateKey, setPrivateKey] = useState(null);
   const [user,setUser] = useState(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
+  const [isSendReefModalOpen, setIsSendReefModalOpen] = useState(false)
   const [balance,setBalance] = useState("fetching")
   const [destination,setDestination] = useState("");
   const [amount,setAmount] = useState(0);
-  const [sendBtnVal,setSendBtnVal] = useState("Enter address");
+  const [sendBtnVal,setSendBtnVal] = useState("Enter native address");
   const [reefProvider, setReefProvider] = useState(null);
 
   useEffect(() => {
@@ -48,6 +48,7 @@ function App() {
         setPrivateKey(privateKey);
         const provider = await getProvider();
         setReefProvider(provider);
+        
       } catch (error) {
         console.error(error);
       }
@@ -58,19 +59,15 @@ function App() {
 
   useEffect(() => {
     getUserInfo();
-  }, [PrivateKey!=null])
+  }, [PrivateKey])
 
   useEffect(() => {
     getNativeAddress();
   }, [user!=null])
-
-  useEffect(async()=>{
-    const provider = await getProvider();
-    setReefProvider(provider);
-  },[reefProvider])
   
 
   const getUserInfo = async () => {
+    if(web3auth==null)return;
     const user = await web3auth.getUserInfo();
     setUser(user);
   };
@@ -175,6 +172,20 @@ function App() {
     </div>
   </Uik.Modal>
   }
+  const sendReefModal = ()=>{
+    return <Uik.Modal
+    title='Send Reef'
+    isOpen={isSendReefModalOpen}
+    onClose={() => setIsSendReefModalOpen(false)}
+    onOpened={() => {}}
+    onClosed={() => {}}
+  >
+    <div>
+    <Uik.Text text='Transfer Reef to a Native Address'/>
+   {sendReefContainer()}
+    </div>
+  </Uik.Modal>
+  }
 
   const amountValidator = async(e)=>{
       if(e.target.value<=0){
@@ -192,7 +203,7 @@ function App() {
   }
 
   const isValidAddress = (address)=>{
-    if(address.length==48)return true;
+    if(address.length===48)return true;
     return false;
   }
 
@@ -212,6 +223,23 @@ function App() {
       setDestination(e.target.value)
   }
 
+  const sendReefContainer = ()=>{
+    return <div className="sendReefContainer">
+<Uik.Input className="sendReefContainerFormDestination" placeholder="Destination" name={"destination"} onChange={destinationValidator}/>
+<Uik.Input className="sendReefContainerFormDestination" placeholder="Amount" type="number" name={"amount"} onChange={amountValidator}/>
+<div className="sendBtn">
+<button
+type="button"
+className="send-reef-btn"
+onClick={makeTransaction}
+>
+<Uik.Bubbles />
+<Uik.Text text={sendBtnVal} className="sendBtnText"/>
+</button>
+</div>
+    </div>
+  }
+
   return (
     <div className="App">
       <header className="App-header">
@@ -220,31 +248,19 @@ function App() {
         <div>
           <div className="usernameBtn">
             <div className="usernameElem">
-              {balance!="fetching"?
+              {balance!=="fetching"?
                 <Uik.Button text={balance.split('.')[0]+' REEF'}/>:
               <Uik.Button text='Button' loading size='small' loader='fish'/>
             }
             </div>
           <Uik.Button text={user.name} rounded fill onClick={()=>setIsAccountModalOpen(true)} size='large'/>
           </div>
-          <div className="sendReefContainer">
-          <Uik.Card title='Send Reef' titlePosition='center' className="sendReefContainerForm">
-    <Uik.Input className="sendReefContainerFormDestination" placeholder="Destination" name={"destination"} onChange={destinationValidator}/>
-    <Uik.Input className="sendReefContainerFormDestination" placeholder="Amount" type="number" name={"amount"} onChange={amountValidator}/>
-    <div className="sendBtn">
-      <button
-      type="button"
-      className="send-reef-btn"
-      onClick={makeTransaction}
-    >
-      <Uik.Bubbles />
-      <Uik.Text text={sendBtnVal} className="sendBtnText"/>
-    </button>
-    </div>
-          </Uik.Card>
-          </div>
+          {sendReefModal()}
         <button onClick={() => signRaw("hello anukul")} className="card">
           Sign Raw
+        </button>
+        <button onClick={() => setIsSendReefModalOpen(true)} className="card">
+          Send Reef
         </button>
         <br />
         {modal()}

@@ -25,10 +25,10 @@
 }
 
 .sendReefContainer{
-    margin: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
 }
 .sendReefContainerForm{
     max-width: 450px;
@@ -36,6 +36,7 @@
 
 .sendReefContainerFormDestination{
     padding: 10px;
+    max-width: 400px;
 }
 
 .sendReefBtn{
@@ -43,6 +44,7 @@
     outline: none;
     padding: 20px;
     border: 0px;
+    min-width: 300px;
 }
 
 .send-reef-btn {
@@ -56,7 +58,7 @@
     color: white;
     padding: 12px 20px;
     width: 90%;
-    min-width: 100px;
+    min-width: 380px;
     text-decoration: none;
     border-radius: 20px;
     border: none;
@@ -74,4 +76,8 @@
 
   .sendBtnText{
     color: white!important;
+  }
+
+  .uik-modal__popup{
+    max-width: max-content!important;
   }
