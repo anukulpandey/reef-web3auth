@@ -27,6 +27,7 @@ function App() {
   const [sendBtnVal,setSendBtnVal] = useState("Enter native address");
   const [reefProvider, setReefProvider] = useState(null);
   const [nativeAddress,setNativeAddress] = useState(null);
+  const [disperseArray,setDisperseArray] = useState(null);
   
   useEffect(() => {
     const init = async () => {
@@ -193,6 +194,9 @@ function App() {
         .signAndSend(_keyPair);
       Uik.notify.success(`Transaction Successful! Sent ${amount} to ${destination}`)
       Uik.notify.info(`Transaction hash : ${txHash.toHuman()}`)
+      const data = await provider.query.system.account(_keyPair.address);
+      setBalance(utils.formatUnits(BigNumber.from(data.data.free.toString())._hex, 18) +
+      " REEF");
       Uik.dropConfetti()
     }else{
       Uik.notify.danger('Please enter details')
@@ -310,6 +314,72 @@ onClick={makeTransaction}
      }
   }
 
+  function separateAddressAndAmount(inputStr){
+    const separatedArr = inputStr.split(",");
+    let address = separatedArr[0].split("[")[1];
+    let amount = separatedArr[1].split("]")[0]
+    if(isValidAddress(address)&&isValidAmount(amount)){
+      return [address,amount]
+    }else{
+      if(!isValidAddress(address))Uik.notify.danger(`${address} is invalid`);
+      else Uik.notify.danger(`${amount} is invalid`);
+    }
+    return [];
+  }
+
+  function parseInput(inputString) {
+    const cleanedInput = inputString.replace(/\s+/g, '');
+    const addressAmountPairs = cleanedInput.match(/\[.*?\]/g);
+    let temp =[];
+    let validAddressAndAmounts = [];
+    for(let i=0;i<addressAmountPairs.length;i++){
+      temp = separateAddressAndAmount(addressAmountPairs[i]);
+      if(temp.length==2){
+        validAddressAndAmounts.push(temp);
+      }
+    }
+    return validAddressAndAmounts;
+  }
+  
+  const disperseReefBatch =async (disperseReef)=>{
+    const SINGLE_REEF = BigNumber.from("1000000000000000000");
+    let transfers = []
+    for(let i=0;i<disperseReef.length;i++){
+      let TRANSFER_ADDRESS = disperseReef[i][0]
+      let TRANSFER_AMOUNT = SINGLE_REEF.mul(parseInt(disperseReef[i][1]));
+      let transfer = reefProvider.tx.balances.transfer(
+        TRANSFER_ADDRESS,
+        TRANSFER_AMOUNT.toString()
+      );
+      transfers.push(transfer);
+    }
+    const signer = await getReefKeypair();
+    for(let i=0;i<transfers.length;i++){
+    let hash = await transfers[i].signAndSend(signer);
+    Uik.notify.success(`Successfully sent ${disperseReef[i][1]} to ${disperseReef[i][0]}`);
+    Uik.notify.success(`Hash: ${hash.toHuman()}`);
+    const data = await reefProvider.query.system.account(signer.address);
+      setBalance(utils.formatUnits(BigNumber.from(data.data.free.toString())._hex, 18) +
+      " REEF");
+
+    }
+  
+    // const batchTx = reefProvider.tx.utility.batch(transfers);
+    
+    // console.log(hash)
+    // return hash
+  }
+
+  const handleDisperse = async()=>{
+try {
+  const parsedInput = parseInput(disperseArray);
+  await disperseReefBatch(parsedInput);
+} catch (error) {
+  console.log(error);
+  Uik.notify.danger("Encountered an error");
+}
+  }
+
   return (
     <div className="App">
       <header className="App-header">
@@ -336,12 +406,12 @@ onClick={makeTransaction}
         <Uik.Text text='Disperse Reef Tokens' type='headline' className="headline-padding"/>
         <div className="disperse-container">
         <Uik.Card>
-        <Uik.Input label='Enter Addresses & Amounts' placeholder={`{[5GQaLP6ap6JW4MbS22gVXLnUJxiVxCZzPA88cQfPSRZCYRNF,500],  [5EnY9eFwEDcEJ62dJWrTXhTucJ4pzGym4WZ2xcDKiT3eJecP,230],  [5FbG3RL7ftBhHm9eaZ3EDRVWJEFpF8ohct3JeohZdmiF8oDb,123]}`} rows={10} textarea />
+        <Uik.Input label='Enter Addresses & Amounts' placeholder={`{[5GQaLP6ap6JW4MbS22gVXLnUJxiVxCZzPA88cQfPSRZCYRNF,500],  [5EnY9eFwEDcEJ62dJWrTXhTucJ4pzGym4WZ2xcDKiT3eJecP,230],  [5FbG3RL7ftBhHm9eaZ3EDRVWJEFpF8ohct3JeohZdmiF8oDb,123]}`} rows={10} textarea onChange={e=>setDisperseArray(e.target.value)}/>
         <div className="sendBtn-disperse">
 <button
 type="button"
 className="send-reef-btn-disperse"
-onClick={makeTransaction}
+onClick={handleDisperse}
 >
   
 <Uik.Bubbles />
@@ -351,6 +421,16 @@ onClick={makeTransaction}
 </div>
         </Uik.Card>
         </div>
+        <footer>
+      <div onClick={()=>window.open("https://github.com/reef-chain/web3auth","_blank")} className="github">
+          <Uik.Avatar
+    name={'reef-chain'}
+    image={'/github.png'}
+    size="small"
+    className="accountInfoContent"
+  />
+          </div>
+      </footer>
         </div>
         <br />
         {modal()}
@@ -368,7 +448,7 @@ onClick={makeTransaction}
           <br/>
           {reefProvider || (web3auth && web3auth.status!="connected")?<Uik.Button text='Login' onClick={login} fill/>:<Uik.Button text='Initializing...' disabled/>}
       
-          
+    
           <br/>
           <div className="source-code-at">
           <Uik.Text text="Source code can be found at " type="light"/>
@@ -386,16 +466,6 @@ onClick={makeTransaction}
         </div>
           }
       </header>
-      <footer>
-      <div onClick={()=>window.open("https://github.com/reef-chain/web3auth","_blank")} className="github">
-          <Uik.Avatar
-    name={'reef-chain'}
-    image={'/github.png'}
-    size="small"
-    className="accountInfoContent"
-  />
-          </div>
-      </footer>
     </div>
   );
 }
