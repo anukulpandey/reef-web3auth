@@ -363,11 +363,6 @@ onClick={makeTransaction}
       " REEF");
 
     }
-  
-    // const batchTx = reefProvider.tx.utility.batch(transfers);
-    
-    // console.log(hash)
-    // return hash
   }
 
   const handleDisperse = async()=>{
