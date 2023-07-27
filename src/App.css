@@ -97,3 +97,19 @@
 
     color: #5d3bad;
   }
+
+.not-loggedin-page{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.source-code-at{
+  display: flex;
+  align-items: center;
+}
+
+.text-containers{
+  max-width: 600px;
+}

@@ -7,11 +7,9 @@ import { u8aToHex } from "@polkadot/util";
 import { wrapBytes } from "@reef-defi/extension-dapp";
 import { decodeAddress, signatureVerify } from "@reef-defi/util-crypto";
 import { getProvider } from "./utils";
-import { utils, BigNumber, Contract, ethers } from "ethers";
+import { utils, BigNumber, ethers } from "ethers";
 import Uik from "@reef-defi/ui-kit";
-import {Abi} from "@polkadot/api-contract";
 import { toUtf8Bytes } from "ethers/lib/utils";
-import {Provider} from "@ethersproject/abstract-provider"
 
 const clientId =
   "BJJcvvvZaGzrWK90JRN2dSQ3g67rMGIn6hh9sWDIg7SVvo6se_1JD1k8_86VshiIu1dllrcj5Pr3wYDO10lFoB0";
@@ -306,6 +304,11 @@ onClick={makeTransaction}
     </div>
   }
 
+  const login =async ()=>{
+    if(!web3auth)return;
+    await web3auth.connect()
+  }
+
   return (
     <div className="App">
       <header className="App-header">
@@ -332,7 +335,34 @@ onClick={makeTransaction}
         <br />
         {modal()}
         </div>
-        :<div>You need to login to see this page</div>}
+        : 
+        <div className="not-loggedin-page">
+          <Uik.Text text='Reef x Web3Auth Example' type='headline'/>
+          <br/>
+          <div className="text-containers">
+          <Uik.Text text="NOTE: This DApp is specifically designed as an example of Web3auth's integration with Reef Chain"/>
+          <br/>
+          <Uik.Text text="In this example we have built a Reef Disperse App, which will streamline the process of dispersing Reef tokens to multiple addresses while ensuring reduced transaction fees compared to traditional methods." type="light"/>
+          <br/>
+          <Uik.Text text="To use this app you need to login by clicking the button below, you don't need to install the extension" type="light"/>
+          <br/>
+          <Uik.Button text='Login' onClick={login} fill/>
+          <br/>
+          <div className="source-code-at">
+          <Uik.Text text="Source code can be found at " type="light"/>
+          <div onClick={()=>window.open("https://github.com/reef-chain/web3auth","_blank")}>
+          <Uik.Avatar
+    name={'reef-chain'}
+    image={'/github.png'}
+    size="small"
+    className="accountInfoContent"
+  />
+          </div>
+          </div>
+          </div>
+          
+        </div>
+          }
       </header>
     </div>
   );
