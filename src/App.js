@@ -387,7 +387,7 @@ try {
         {nativeAddress?
         <div>
           <div className="usernameBtn">
-            <button className="textBtn" onClick={bindEvm}>Buy Reef</button>
+            <button className="textBtn" onClick={()=>window.open("https://discord.com/channels/793946260171259904/1087737503550816396","_blank")}>Get Reef</button>
             <button className="textBtn" onClick={bindEvm}>Bind EVM</button>
             <button className="textBtn" onClick={()=>setIsSendReefModalOpen(true)}>Send Reef</button>
             <div className="usernameElem">
