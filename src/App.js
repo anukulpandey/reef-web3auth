@@ -10,6 +10,7 @@ import { getProvider } from "./utils";
 import { utils, BigNumber, ethers } from "ethers";
 import Uik from "@reef-defi/ui-kit";
 import { toUtf8Bytes } from "ethers/lib/utils";
+import { cryptoWaitReady } from "@reef-defi/util-crypto";
 
 const clientId =
   "BJJcvvvZaGzrWK90JRN2dSQ3g67rMGIn6hh9sWDIg7SVvo6se_1JD1k8_86VshiIu1dllrcj5Pr3wYDO10lFoB0";
@@ -29,6 +30,7 @@ function App() {
   useEffect(() => {
     const init = async () => {
       try {
+        await cryptoWaitReady();
         const web3auth = new Web3Auth({
           clientId,
           web3AuthNetwork: "cyan",
@@ -42,7 +44,7 @@ function App() {
         setWeb3auth(web3auth);
 
         await web3auth.initModal();
-        const _web3authProvider = web3auth.connect();
+        web3auth.connect();
         const privateKey = await web3auth.provider.request({
           method: "private_key",
         });
@@ -51,14 +53,13 @@ function App() {
         setReefProvider(provider);
         
       } catch (error) {
+        await cryptoWaitReady();
         console.error(error);
       }
     };
 
     init();
   }, []);
-
-  const contractAddress = "0x6D0Ed5218b62468aE6987B1E95B7b07054684d80";
   useEffect(() => {
     getUserInfo();
   }, [PrivateKey])
@@ -66,7 +67,7 @@ function App() {
   useEffect(() => {
     getNativeAddress();
   }, [user!=null])
-  
+
 
   const getUserInfo = async () => {
     if(web3auth==null)return;
@@ -74,24 +75,10 @@ function App() {
     setUser(user);
   };
 
-  const contractABI = [{
-    "name": "getOwner",
-    "type": "function",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "pure"
-  }];
 
-
-  const getNativeAddress = async () => {    
-    const keyring = new Keyring({ ss58Format: 42, type: "sr25519" });
-    const _keyPair = keyring.addFromUri("0x" + String(PrivateKey));
+  const getNativeAddress = async () => { 
+    await cryptoWaitReady();   
+    const _keyPair = await getReefKeypair();
     let userData = user; 
     if(user!=null){
       userData['address'] = _keyPair?.address;
@@ -153,12 +140,17 @@ function App() {
     }
   }
 
-  const signRaw = async (message) => {
+  const getReefKeypair = async()=>{
     const privateKey = await web3auth.provider.request({
       method: "private_key",
     });
     const keyring = new Keyring({ ss58Format: 42, type: "sr25519" });
-    const _keyPair = keyring.addFromUri("0x" + String(privateKey));
+    const keypair = keyring.addFromUri("0x" + String(privateKey));
+    return keypair;
+  }
+
+  const signRaw = async (message) => {
+    const _keyPair = await getReefKeypair()
 let provider;
       if(reefProvider==null){
         provider = await getProvider();
@@ -178,15 +170,14 @@ let provider;
 
   const logout = async () => {
     await web3auth.logout();
+    console.log(user);
+    reloadPage()
   };
 
   const makeTransaction = async () => {
     if(isValidAddress(destination) && isValidAmount(amount)){
-      const privateKey = await web3auth.provider.request({
-        method: "private_key",
-      });
-      const keyring = new Keyring({ ss58Format: 42, type: "sr25519" });
-      const _keyPair = keyring.addFromUri("0x" + String(privateKey));
+      
+      const _keyPair = await getReefKeypair();
       let provider;
       if(reefProvider==null){
         provider = await getProvider();
@@ -304,16 +295,23 @@ onClick={makeTransaction}
     </div>
   }
 
+  const reloadPage = () => {
+    window.location.reload();
+  };
+
   const login =async ()=>{
     if(!web3auth)return;
-    await web3auth.connect()
+    const res = await web3auth.connect()
+    const user = await web3auth.getUserInfo();
+    setUser(user);
+    reloadPage();
   }
 
   return (
     <div className="App">
       <header className="App-header">
         <Uik.ReefLogo />
-        {user!=null?
+        {user!=null && PrivateKey?
         <div>
           <div className="usernameBtn">
             <button className="textBtn" onClick={bindEvm}>Bind EVM</button>
