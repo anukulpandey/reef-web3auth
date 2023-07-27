@@ -6,6 +6,7 @@
     width: 100vw;
     display: flex;
     flex-direction: column;
+ 
 }
 
 .usernameBtn{
@@ -67,6 +68,26 @@
     filter: brightness(1.05);
     transition: all 0.1s;
   }
+.send-reef-btn-disperse {
+    margin-top: 30px;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #c52cbc, #8332ca);
+    box-shadow: 0 15px 30px -15px #8332ca;
+    color: white;
+    padding: 20px 40px;
+    width: 100%;
+    min-width: 380px;
+    text-decoration: none;
+    border-radius: 20px;
+    border: none;
+    position: relative;
+    overflow: hidden;
+    filter: brightness(1.05);
+    transition: all 0.1s;
+  }
 
   .sendBtn{
     display: flex;
@@ -76,6 +97,11 @@
 
   .sendBtnText{
     color: white!important;
+  }
+
+  .sendBtnText-disperse{
+    color: white!important;
+    font-size: 18px!important;
   }
 
   .uik-modal__popup{
@@ -112,4 +138,36 @@
 
 .text-containers{
   max-width: 600px;
+}
+
+.disperse-container{
+  
+  min-width: 700px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+ 
+}
+
+.disperse-body{
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  margin-top: 40px;
+}
+
+.headline-padding{
+  padding: 20px;
+}
+
+footer{
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+}
+
+.github:hover{
+  cursor: pointer;
 }

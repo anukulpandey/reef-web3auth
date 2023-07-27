@@ -26,6 +26,7 @@ function App() {
   const [amount,setAmount] = useState(0);
   const [sendBtnVal,setSendBtnVal] = useState("Enter native address");
   const [reefProvider, setReefProvider] = useState(null);
+  const [nativeAddress,setNativeAddress] = useState(null);
   
   useEffect(() => {
     const init = async () => {
@@ -44,7 +45,11 @@ function App() {
         setWeb3auth(web3auth);
 
         await web3auth.initModal();
-        web3auth.connect();
+        const res = await web3auth.connect();
+        if(!web3auth.provider){
+          reloadPage();
+          await getNativeAddress()
+        }
         const privateKey = await web3auth.provider.request({
           method: "private_key",
         });
@@ -66,7 +71,7 @@ function App() {
 
   useEffect(() => {
     getNativeAddress();
-  }, [user!=null])
+  }, [nativeAddress])
 
 
   const getUserInfo = async () => {
@@ -79,6 +84,7 @@ function App() {
   const getNativeAddress = async () => { 
     await cryptoWaitReady();   
     const _keyPair = await getReefKeypair();
+    setNativeAddress(_keyPair?.address);
     let userData = user; 
     if(user!=null){
       userData['address'] = _keyPair?.address;
@@ -93,6 +99,7 @@ function App() {
       setBalance(utils.formatUnits(BigNumber.from(data.data.free.toString())._hex, 18) +
       " REEF");
     }
+    return _keyPair?.address;
   };
 
   const isValidSignature = (signedMessage, signature, address) => {
@@ -151,12 +158,6 @@ function App() {
 
   const signRaw = async (message) => {
     const _keyPair = await getReefKeypair()
-let provider;
-      if(reefProvider==null){
-        provider = await getProvider();
-      }else{
-        provider = reefProvider
-      }
     const signature = u8aToHex(_keyPair.sign(wrapBytes(message)));
     const _isValid = await isValidSignature(
       message,
@@ -288,6 +289,7 @@ type="button"
 className="send-reef-btn"
 onClick={makeTransaction}
 >
+
 <Uik.Bubbles />
 <Uik.Text text={sendBtnVal} className="sendBtnText"/>
 </button>
@@ -301,19 +303,21 @@ onClick={makeTransaction}
 
   const login =async ()=>{
     if(!web3auth)return;
-    const res = await web3auth.connect()
-    const user = await web3auth.getUserInfo();
-    setUser(user);
-    reloadPage();
+    getProvider();
+     await web3auth.connect()
+     while(true){
+        await getNativeAddress()
+     }
   }
 
   return (
     <div className="App">
       <header className="App-header">
         <Uik.ReefLogo />
-        {user!=null && PrivateKey?
+        {nativeAddress?
         <div>
           <div className="usernameBtn">
+            <button className="textBtn" onClick={bindEvm}>Buy Reef</button>
             <button className="textBtn" onClick={bindEvm}>Bind EVM</button>
             <button className="textBtn" onClick={()=>setIsSendReefModalOpen(true)}>Send Reef</button>
             <div className="usernameElem">
@@ -325,11 +329,29 @@ onClick={makeTransaction}
           <Uik.Button text={user.name} rounded fill onClick={()=>setIsAccountModalOpen(true)} size='large'/>
           </div>
           {sendReefModal()}
-        <button onClick={() => signRaw("hello anukul")} className="card">
+        {/* <button onClick={() => signRaw("hello anukul")} className="card">
           Sign Raw
-        </button>
-        <br />
-        
+        </button> */}
+        <div className="disperse-body">
+        <Uik.Text text='Disperse Reef Tokens' type='headline' className="headline-padding"/>
+        <div className="disperse-container">
+        <Uik.Card>
+        <Uik.Input label='Enter Addresses & Amounts' placeholder={`{[5GQaLP6ap6JW4MbS22gVXLnUJxiVxCZzPA88cQfPSRZCYRNF,500],  [5EnY9eFwEDcEJ62dJWrTXhTucJ4pzGym4WZ2xcDKiT3eJecP,230],  [5FbG3RL7ftBhHm9eaZ3EDRVWJEFpF8ohct3JeohZdmiF8oDb,123]}`} rows={10} textarea />
+        <div className="sendBtn-disperse">
+<button
+type="button"
+className="send-reef-btn-disperse"
+onClick={makeTransaction}
+>
+  
+<Uik.Bubbles />
+<Uik.Text text={"Disperse Reef"} className="sendBtnText-disperse"/>
+
+</button>
+</div>
+        </Uik.Card>
+        </div>
+        </div>
         <br />
         {modal()}
         </div>
@@ -344,7 +366,9 @@ onClick={makeTransaction}
           <br/>
           <Uik.Text text="To use this app you need to login by clicking the button below, you don't need to install the extension" type="light"/>
           <br/>
-          <Uik.Button text='Login' onClick={login} fill/>
+          {reefProvider || (web3auth && web3auth.status!="connected")?<Uik.Button text='Login' onClick={login} fill/>:<Uik.Button text='Initializing...' disabled/>}
+      
+          
           <br/>
           <div className="source-code-at">
           <Uik.Text text="Source code can be found at " type="light"/>
@@ -362,6 +386,16 @@ onClick={makeTransaction}
         </div>
           }
       </header>
+      <footer>
+      <div onClick={()=>window.open("https://github.com/reef-chain/web3auth","_blank")} className="github">
+          <Uik.Avatar
+    name={'reef-chain'}
+    image={'/github.png'}
+    size="small"
+    className="accountInfoContent"
+  />
+          </div>
+      </footer>
     </div>
   );
 }
