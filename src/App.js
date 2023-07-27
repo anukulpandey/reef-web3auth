@@ -35,7 +35,7 @@ function App() {
         await cryptoWaitReady();
         const web3auth = new Web3Auth({
           clientId,
-          web3AuthNetwork: "cyan",
+          web3AuthNetwork:"testnet",
           chainConfig: {
             chainNamespace: CHAIN_NAMESPACES.OTHER,
             chainId: "0x3673",
